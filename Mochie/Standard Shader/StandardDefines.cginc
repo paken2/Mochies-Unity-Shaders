@@ -71,6 +71,9 @@ float _HeightOffset;
 float _HeightSteps;
 float _MaxHeightSteps;
 float _MinHeightSteps;
+int _HeightFalloff;
+float _HeightMinRange;
+float _HeightMaxRange;
 
 int _SampleMetallic;
 int _SampleOcclusion;

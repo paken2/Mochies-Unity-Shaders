@@ -44,7 +44,9 @@ namespace Mochie {
         public static GUIContent horizonAdjustmentText = new GUIContent("Horizon Adjustment", "Adjusts the strength of the effect at sharper viewing angles to avoid artifacts.");
         public static GUIContent hueModeText = new GUIContent("Hue Mode", "HSV:\nStandard hue shift model.\n\nOklab:\nA more subtle, less saturated hue shift.");
         public static GUIContent additiveLightVolumeText = new GUIContent("Additive Volumes", "Enables additive light volumes. See Light Volumes documentation for more info.");
-        
+        public static GUIContent heightFalloffText = new GUIContent("Height Falloff", "Fades the effect out based on distance. This can help with performance in larger scale environments.");
+        public static GUIContent parallaxFalloffText = new GUIContent("Parallax Falloff", "Fades the effect out based on distance. This can help with performance in larger scale environments.");
+
         // Standard
         public static GUIContent standWorkflow = new GUIContent("Workflow", "Standard:\nDefault packing mode of visually separated texture slots for PBR maps, uses MAHS format.\n\nPacked: \nModular packing mode that combines all PBR texture slots into one and allows channel selection.");
         public static GUIContent standBlendMode = new GUIContent("Blending Mode", "Opaque:\nDefault blending mode, has no transparency support.\n\nCutout:\nPixels outside the alpha threshold will be discarded and not rendered.\n\nFade:\nCreates a smoothly blended transparency that takes all alpha values from 0-1 into account when determining opacity.\n\nTransparent:\nFunctions similarily to Fade, but maintains reflections and specular behavior on transparent areas (ie. glass).");

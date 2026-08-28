@@ -3,10 +3,11 @@
 
 float3 GetUnitySH(float3 normal){
     #if defined(BAKERY_SHNONLINEAR)
-        return max(0, ShadeSHNL(normal));
+        float3 SH = max(0, ShadeSHNL(normal));
     #else
-        return max(0, ShadeSH9(float4(normal, 1)));
+        float3 SH = max(0, ShadeSH9(float4(normal, 1)));
     #endif
+    return lerp(1, SH, _SphericalHarmonics);
 }
 
 float3 GetSH(v2f i, InputData id, float3 viewDir){

@@ -8,6 +8,11 @@ Shader "Hidden/Mochie/TexturePacker"
         _Invert_Green("Invert_Green", Float) = 0
         _Invert_Blue("Invert_Blue", Float) = 0
         _Invert_Alpha("Invert_Alpha", Float) = 0
+        _Strength_Red("Strength_Red", Float) = 1
+        _Strength_Green("Strength_Green", Float) = 1
+        _Strength_Blue("Strength_Blue", Float) = 1
+        _Strength_Alpha("Strength_Alpha", Float) = 1
+        _IsOcclusion_Red("IsOcclusion_Red", Float) = 0
         _Red("Red", 2D) = "white" {}
         _Green("Green", 2D) = "white" {}
         _Blue("Blue", 2D) = "white" {}
@@ -59,15 +64,23 @@ Shader "Hidden/Mochie/TexturePacker"
             uniform sampler2D _Red;
             uniform float4 _Red_ST;
             uniform float _Invert_Red;
+            uniform float _Strength_Red;
+            uniform float _IsOcclusion_Red;
+
             uniform sampler2D _Green;
             uniform float4 _Green_ST;
             uniform float _Invert_Green;
+            uniform float _Strength_Green;
+
             uniform sampler2D _Blue;
             uniform float4 _Blue_ST;
             uniform float _Invert_Blue;
+            uniform float _Strength_Blue;
+
             uniform sampler2D _Alpha;
             uniform float4 _Alpha_ST;
             uniform float _Invert_Alpha;
+            uniform float _Strength_Alpha;
             
             v2f vert ( appdata v )
             {
@@ -89,28 +102,27 @@ Shader "Hidden/Mochie/TexturePacker"
             fixed4 frag (v2f i ) : SV_Target
             {
                 UNITY_SETUP_INSTANCE_ID(i);
-                fixed4 finalColor;
                 float2 uv_Red = i.ase_texcoord.xy * _Red_ST.xy + _Red_ST.zw;
-                float4 tex2DNode28 = tex2D( _Red, uv_Red );
-                float4 temp_cast_0 = (_Invert_Red).xxxx;
-                float4 lerpResult27 = lerp( tex2DNode28 , ( temp_cast_0 - tex2DNode28 ) , _Invert_Red);
+                float4 tex2DNode28 = tex2D(_Red, uv_Red);
+                float redVal = lerp(tex2DNode28.r, 1.0 - tex2DNode28.r, _Invert_Red);
+                if (_IsOcclusion_Red > 0.5)
+                    redVal = lerp(1.0, redVal, _Strength_Red);
+                else
+                    redVal = redVal * _Strength_Red;
+
                 float2 uv_Green = i.ase_texcoord.xy * _Green_ST.xy + _Green_ST.zw;
-                float4 tex2DNode12 = tex2D( _Green, uv_Green );
-                float4 temp_cast_2 = (_Invert_Green).xxxx;
-                float4 lerpResult20 = lerp( tex2DNode12 , ( temp_cast_2 - tex2DNode12 ) , _Invert_Green);
+                float4 tex2DNode12 = tex2D(_Green, uv_Green);
+                float greenVal = lerp(tex2DNode12.r, 1.0 - tex2DNode12.r, _Invert_Green) * _Strength_Green;
+
                 float2 uv_Blue = i.ase_texcoord.xy * _Blue_ST.xy + _Blue_ST.zw;
-                float4 tex2DNode14 = tex2D( _Blue, uv_Blue );
-                float4 temp_cast_4 = (_Invert_Blue).xxxx;
-                float4 lerpResult21 = lerp( tex2DNode14 , ( temp_cast_4 - tex2DNode14 ) , _Invert_Blue);
+                float4 tex2DNode14 = tex2D(_Blue, uv_Blue);
+                float blueVal = lerp(tex2DNode14.r, 1.0 - tex2DNode14.r, _Invert_Blue) * _Strength_Blue;
+
                 float2 uv_Alpha = i.ase_texcoord.xy * _Alpha_ST.xy + _Alpha_ST.zw;
-                float4 tex2DNode13 = tex2D( _Alpha, uv_Alpha );
-                float4 temp_cast_6 = (_Invert_Alpha).xxxx;
-                float4 lerpResult19 = lerp( tex2DNode13 , ( temp_cast_6 - tex2DNode13 ) , _Invert_Alpha);
-                float4 appendResult30 = (float4(lerpResult27.r , lerpResult20.r , lerpResult21.r , lerpResult19.r));
-                
-                
-                finalColor = appendResult30;
-                return finalColor;
+                float4 tex2DNode13 = tex2D(_Alpha, uv_Alpha);
+                float alphaVal = lerp(tex2DNode13.r, 1.0 - tex2DNode13.r, _Invert_Alpha) * _Strength_Alpha;
+
+                return saturate(fixed4(redVal, greenVal, blueVal, alphaVal));
             }
             ENDCG
         }

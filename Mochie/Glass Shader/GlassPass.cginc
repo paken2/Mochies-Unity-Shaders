@@ -1,4 +1,4 @@
-﻿#ifndef GLASS_PASS_INCLUDED
+#ifndef GLASS_PASS_INCLUDED
 #define GLASS_PASS_INCLUDED
 
 v2f vert (appdata v){
@@ -122,7 +122,16 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
     float3 lightDir = normalize(UnityWorldSpaceLightDir(i.worldPos));
     float3 reflDir = reflect(-viewDir, normalDir);
 
-    float roughnessMap = SampleTexture(_RoughnessMap, TRANSFORM_TEX(i.uv, _RoughnessMap)) * _Roughness;
+    #if defined(_WORKFLOW_PACKED_ON)
+        float4 packedMap = SampleTexture(_PackedMap, TRANSFORM_TEX(i.uv, _PackedMap));
+        float roughnessMap = packedMap[_RoughnessChannel] * _PackedRoughnessStrength;
+        float3 occlusion = lerp(1, packedMap[_OcclusionChannel], _PackedOcclusionStrength);
+        float metallic = packedMap[_MetallicChannel] * _PackedMetallicStrength;
+    #else
+        float roughnessMap = SampleTexture(_RoughnessMap, TRANSFORM_TEX(i.uv, _RoughnessMap)) * _Roughness;
+        float3 occlusion = lerp(1, SampleTexture(_OcclusionMap, TRANSFORM_TEX(i.uv, _OcclusionMap)), _Occlusion);
+        float metallic = SampleTexture(_MetallicMap, TRANSFORM_TEX(i.uv, _MetallicMap)) * _Metallic;
+    #endif
     flipbookBase = smoothstep(0, 0.1, flipbookBase);
     flipbookBase *= smoothstep(0, 0.1, rainStrength);
     #if defined(_RAINMODE_AUTO)
@@ -130,9 +139,7 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
     #endif
     float roughness = saturate(roughnessMap-flipbookBase);
     ApplyGSAA(i.normal, roughness);
-    float3 occlusion = lerp(1, SampleTexture(_OcclusionMap, TRANSFORM_TEX(i.uv, _OcclusionMap)), _Occlusion);
     float indirectRough = roughness;
-    float metallic = SampleTexture(_MetallicMap, TRANSFORM_TEX(i.uv, _MetallicMap)) * _Metallic;
 
     #if defined(_SPECULAR_HIGHLIGHTS_ON) || defined(_REFLECTIONS_ON) || defined(_SSR_ON) || AREALIT_ENABLED || LTCGI_ENABLED
         float roughSq = roughness * roughness;
@@ -149,7 +156,7 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
 
         #if defined(_REFLECTIONS_ON) || defined(_SSR_ON) || LTCGI_ENABLED
             float surfaceReduction = 1.0 / (roughBRDF*roughBRDF + 1.0);
-            float grazingTerm = saturate((1-_Roughness) + (1-omr));
+            float grazingTerm = saturate((1-roughness) + (1-omr));
             float3 fresnel = FresnelLerp(specularTint, grazingTerm, NdotV);
             float3 reflAdjust = fresnel * surfaceReduction;
         #endif
@@ -236,7 +243,7 @@ float4 frag (v2f i, bool isFrontFace : SV_IsFrontFace) : SV_Target {
         // _Blur *= 1-min(dist/10, 1);
 
 
-        if (_Roughness > 0 && _Blur > 0)
+        if (roughness > 0 && _Blur > 0)
             grabCol = BlurredGrabpassSample(screenUV, blurStr);
         else
             grabCol = MOCHIE_SAMPLE_TEX2D_SCREENSPACE(_GlassGrab, screenUV);

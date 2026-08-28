@@ -1,4 +1,4 @@
-﻿using UnityEditor;
+using UnityEditor;
 using UnityEngine;
 using System;
 using System.Linq;
@@ -36,7 +36,7 @@ namespace Mochie {
                 "Render Settings"
         }, 0);
 
-        string versionLabel = "v3.3";
+        string versionLabel = "v3.3.1";
 
         // Render Settings
         MaterialProperty _BlendMode = null;
@@ -164,7 +164,6 @@ namespace Mochie {
         MaterialProperty _NormalMapPolarRadius = null;
         MaterialProperty _DistortionStr = null;
         MaterialProperty _DistortionBlend = null;
-        MaterialProperty _DistortionSpeed = null;
         MaterialProperty _DistortMainTex = null;
         MaterialProperty _MeshRefraction = null;
         MaterialProperty _RefractionIOR = null;
@@ -209,7 +208,6 @@ namespace Mochie {
         MaterialProperty _DissolveNoisePolarRotation = null;
         MaterialProperty _DissolveNoisePolarSpeed = null;
         MaterialProperty _DissolveNoisePolarRadius = null;
-        MaterialProperty _DissolveAgeThreshold = null;
         MaterialProperty _DissolveAgeThresholdMin = null;
         MaterialProperty _DissolveAgeThresholdMax = null;
         MaterialProperty _DissolveAmount = null;
@@ -424,9 +422,31 @@ namespace Mochie {
                                 DrawUVBlock(mat, me, _RoughnessMap, _RoughnessMapUVMode, _RoughnessMapSpeed, _RoughnessMapPolarRadius, _RoughnessMapPolarRotation, _RoughnessMapPolarSpeed);
                                 me.TexturePropertySingleLine(Tips.occlusionText, _OcclusionMap, _OcclusionMap.textureValue ? _Occlusion : null);
                                 DrawUVBlock(mat, me, _OcclusionMap, _OcclusionMapUVMode, _OcclusionMapSpeed, _OcclusionMapPolarRadius, _OcclusionMapPolarRotation, _OcclusionMapPolarSpeed);
+                                bool hasAnyTexture = _OcclusionMap.textureValue != null || _RoughnessMap.textureValue != null || _MetallicMap.textureValue != null;
+                                MGUI.ToggleGroup(!hasAnyTexture);
+                                if (MGUI.PropertyButton("Pack Textures")){
+                                    TexturePacker.PackTextures(mat, _OcclusionMap, _Occlusion, _RoughnessMap, _Roughness, _MetallicMap, _Metallic, null, null, _PackedMap);
+                                    _Workflow.floatValue = 1f;
+                                    mat.SetInt("_Workflow", 1);
+                                    _OcclusionChannel.floatValue = 0f;
+                                    mat.SetInt("_OcclusionChannel", 0);
+                                    _RoughnessChannel.floatValue = 1f;
+                                    mat.SetInt("_RoughnessChannel", 1);
+                                    _MetallicChannel.floatValue = 2f;
+                                    mat.SetInt("_MetallicChannel", 2);
+                                    _PackedMetallicStrength.floatValue = 1f;
+                                    mat.SetFloat("_PackedMetallicStrength", 1f);
+                                    _PackedRoughnessStrength.floatValue = 1f;
+                                    mat.SetFloat("_PackedRoughnessStrength", 1f);
+                                    _PackedOcclusionStrength.floatValue = 1f;
+                                    mat.SetFloat("_PackedOcclusionStrength", 1f);
+                                    ApplyMaterialSettings(mat);
+                                }
+                                MGUI.ToggleGroupEnd();
                             }
                             else {
                                 me.TexturePropertySingleLine(Tips.packedMapText, _PackedMap);
+                                DrawUVBlock(mat, me, _PackedMap, _PackedMapUVMode, _PackedMapSpeed, _PackedMapPolarRadius, _PackedMapPolarRotation, _PackedMapPolarSpeed);
                                 me.ShaderProperty(_MetallicChannel, "Metallic Channel");
                                 me.ShaderProperty(_RoughnessChannel, "Roughness Channel");
                                 me.ShaderProperty(_OcclusionChannel, "Occlusion Channel");

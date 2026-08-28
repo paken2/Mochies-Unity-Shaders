@@ -1,10 +1,11 @@
-﻿Shader "Mochie/Glass" {
+Shader "Mochie/Glass" {
     Properties {
 
         _GrabpassTint("Grabpass Tint", Color) = (1,1,1,1)
         _SpecularityTint("Specularity Tint", Color) = (1,1,1,1)
         _BaseColorTint("Base Color Tint", Color) = (0,0,0,1)
 
+        [Enum(Separate,0, Packed,1)]_Workflow("Workflow", Int) = 0
         _MainTex("Base Color", 2D) = "white" {}
         _RoughnessMap("Roughness Map", 2D) = "white" {}
         _MetallicMap("Metallic Map", 2D) = "white" {}
@@ -14,6 +15,13 @@
         _Metallic("Metallic", Range(0,1)) = 0
         _Occlusion("Occlusion", Range(0,1)) = 1
         _NormalStrength("Normal Strength", Float) = 1
+        _PackedMap("Packed Map", 2D) = "white" {}
+        _PackedRoughnessStrength("Packed Roughness Strength", Range(0,1)) = 1
+        _PackedMetallicStrength("Packed Metallic Strength", Range(0,1)) = 1
+        _PackedOcclusionStrength("Packed Occlusion Strength", Range(0,1)) = 1
+        [Enum(Red,0, Green,1, Blue,2, Alpha,3)]_RoughnessChannel("Roughness Channel", Int) = 1
+        [Enum(Red,0, Green,1, Blue,2, Alpha,3)]_MetallicChannel("Metallic Channel", Int) = 2
+        [Enum(Red,0, Green,1, Blue,2, Alpha,3)]_OcclusionChannel("Occlusion Channel", Int) = 0
         [Enum(Low,0, Medium,1, High,2, Ultra,3)]_BlurQuality("Blur Quality", Int) = 1
         _Blur("Blur Strength", Float) = 1
         _Refraction("Refraction Strength", Float) = 5
@@ -147,6 +155,7 @@
             #pragma shader_feature_local _LIT_BASECOLOR_ON
             #pragma shader_feature_local _STOCHASTIC_SAMPLING_ON
             #pragma shader_feature_local _NORMALMAP_ON
+            #pragma shader_feature_local _WORKFLOW_PACKED_ON
             #pragma shader_feature_local _ _RAINMODE_RIPPLE _RAINMODE_AUTO 
             #pragma shader_feature_local _AREALIT_ON
             #pragma shader_feature_local _BICUBIC_LIGHTMAPPING_ON
@@ -176,6 +185,7 @@
             #pragma shader_feature_local _LIT_BASECOLOR_ON
             #pragma shader_feature_local _STOCHASTIC_SAMPLING_ON
             #pragma shader_feature_local _NORMALMAP_ON
+            #pragma shader_feature_local _WORKFLOW_PACKED_ON
             #pragma shader_feature_local _ _RAINMODE_RIPPLE _RAINMODE_AUTO 
             #pragma target 5.0
 
@@ -210,6 +220,7 @@
             #pragma vertex vert_meta
             #pragma fragment frag_meta
             #pragma shader_feature_local _EMISSION_ON
+            #pragma shader_feature_local _WORKFLOW_PACKED_ON
             #pragma shader_feature EDITOR_VISUALIZATION
             #define META_PASS
             #pragma target 5.0

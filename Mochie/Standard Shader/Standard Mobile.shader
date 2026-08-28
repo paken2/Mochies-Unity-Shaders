@@ -35,7 +35,10 @@ Shader "Mochie/Standard Mobile" {
         [IntRange]_HeightSteps("Height Steps", Range(1,16)) = 8
         [IntRange]_MaxHeightSteps("Max Height Steps", Range(16,64)) = 16
         [IntRange]_MinHeightSteps("Min Height Steps", Range(8, 16)) = 8
-        
+        [ToggleUI]_HeightFalloff("Height Falloff", Int) = 0
+        _HeightMinRange("Min Range", Float) = 25
+        _HeightMaxRange("Max Range", Float) = 50
+
         _PackedMap("Packed Map", 2D) = "white" {}
         [Enum(Off,0, On,1)]_PackedHeight("Packed Height", Int) = 0
         _PackedRoughnessStrength("Packed Roughness Strength", Range(0,1)) = 1

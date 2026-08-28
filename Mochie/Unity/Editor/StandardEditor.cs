@@ -1,3 +1,4 @@
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using System.Reflection;
@@ -27,7 +28,7 @@ namespace Mochie {
             "Debug"
         }, 3);
         
-        string versionLabel = "v2.12";
+        string versionLabel = "v2.13";
 
         // Variant Settings
         MaterialProperty _BlendMode = null;
@@ -66,6 +67,9 @@ namespace Mochie {
         // MaterialProperty _MaxHeightSteps = null;
         // MaterialProperty _MinHeightSteps = null;
         MaterialProperty _HeightChannel = null;
+        MaterialProperty _HeightFalloff = null;
+        MaterialProperty _HeightMinRange = null;
+        MaterialProperty _HeightMaxRange = null;
         MaterialProperty _UVMainSet = null;
         MaterialProperty _UVMainSwizzle = null;
         MaterialProperty _UVMainScroll = null;
@@ -511,14 +515,40 @@ namespace Mochie {
                                     // me.ShaderProperty(_MinHeightSteps, "Min Height Steps");
                                     // me.ShaderProperty(_MaxHeightSteps, "Max Height Steps");
                                     me.ShaderProperty(_HeightOffset, Tips.heightOffsetText);
+                                    me.ShaderProperty(_HeightFalloff, Tips.heightFalloffText);
+                                    if (_HeightFalloff.floatValue == 1) {
+                                        me.ShaderProperty(_HeightMinRange, "Min Range");
+                                        me.ShaderProperty(_HeightMaxRange, "Max Range");
+                                    }
                                 }
                             }
-                            // if (MGUI.PropertyButton("Pack Textures")){
-                            // 	PackTextures(_MetallicMap, _RoughnessMap, _OcclusionMap, _HeightMap, _PackedMap);
-                            // 	_PrimaryWorkflow.floatValue = 1f;
-                            // 	mat.SetInt("_PrimaryWorkflow", 1);
-                            // 	MGUI.SetKeyword(mat, "_WORKFLOW_PACKED_ON", true);
-                            // }
+                            bool hasAnyTexture = _OcclusionMap.textureValue != null || _RoughnessMap.textureValue != null || _MetallicMap.textureValue != null || _HeightMap.textureValue != null;
+                            MGUI.ToggleGroup(!hasAnyTexture);
+                            if (MGUI.PropertyButton("Pack Textures")){
+                                TexturePacker.PackTextures(mat, _OcclusionMap, _OcclusionStrength, _RoughnessMap, _RoughnessStrength, _MetallicMap, _MetallicStrength, _HeightMap, _HeightStrength, _PackedMap);
+                                _PrimaryWorkflow.floatValue = 1f;
+                                mat.SetInt("_PrimaryWorkflow", 1);
+                                _OcclusionChannel.floatValue = 0f;
+                                mat.SetInt("_OcclusionChannel", 0);
+                                _RoughnessChannel.floatValue = 1f;
+                                mat.SetInt("_RoughnessChannel", 1);
+                                _MetallicChannel.floatValue = 2f;
+                                mat.SetInt("_MetallicChannel", 2);
+                                _HeightChannel.floatValue = 3f;
+                                mat.SetInt("_HeightChannel", 3);
+                                _PackedMetallicStrength.floatValue = 1f;
+                                mat.SetFloat("_PackedMetallicStrength", 1f);
+                                _PackedRoughnessStrength.floatValue = 1f;
+                                mat.SetFloat("_PackedRoughnessStrength", 1f);
+                                _PackedOcclusionStrength.floatValue = 1f;
+                                mat.SetFloat("_PackedOcclusionStrength", 1f);
+                                bool hasHeight = _HeightMap.textureValue != null;
+                                _PackedHeight.floatValue = hasHeight ? 1f : 0f;
+                                mat.SetInt("_PackedHeight", hasHeight ? 1 : 0);
+                                SetKeywords(mat);
+                                SetBlendMode(mat);
+                            }
+                            MGUI.ToggleGroupEnd();
                         }
                         else {
                             me.TexturePropertySingleLine(Tips.packedMapText, _PackedMap);
@@ -633,7 +663,25 @@ namespace Mochie {
                             me.TexturePropertySingleLine(Tips.packedMapText, _DetailPackedMap);
                             MGUI.sRGBWarning(_DetailPackedMap);
                         }
-                        me.TexturePropertySingleLine(Tips.detailMaskText, _DetailMask, _DetailMask.textureValue ? _DetailMaskChannel : null, _DetailMask.textureValue ? _DetailMaskMode : null);
+                        if (_DetailWorkflow.floatValue == 0){
+                            me.TexturePropertySingleLine(Tips.detailMaskText, _DetailMask, _DetailMask.textureValue ? _DetailMaskChannel : null, _DetailMask.textureValue ? _DetailMaskMode : null);
+                            bool hasAnyTexture = _DetailOcclusionMap.textureValue != null || _DetailRoughnessMap.textureValue != null || _DetailMetallicMap.textureValue != null;
+                            MGUI.ToggleGroup(!hasAnyTexture);
+                            if (MGUI.PropertyButton("Pack Textures")){
+                                TexturePacker.PackTextures(mat, _DetailOcclusionMap, _DetailOcclusionStrength, _DetailRoughnessMap, _DetailRoughnessStrength, _DetailMetallicMap, _DetailMetallicStrength, null, null, _DetailPackedMap);
+                                _DetailWorkflow.floatValue = 1f;
+                                mat.SetInt("_DetailWorkflow", 1);
+                                _DetailOcclusionChannel.floatValue = 0f;
+                                mat.SetInt("_DetailOcclusionChannel", 0);
+                                _DetailRoughnessChannel.floatValue = 1f;
+                                mat.SetInt("_DetailRoughnessChannel", 1);
+                                _DetailMetallicChannel.floatValue = 2f;
+                                mat.SetInt("_DetailMetallicChannel", 2);
+                                SetKeywords(mat);
+                                SetBlendMode(mat);
+                            }
+                            MGUI.ToggleGroupEnd();
+                        }
                     });
                     if (_DetailWorkflow.floatValue == 1){
                         MGUI.PropertyGroup(()=>{
@@ -1437,6 +1485,6 @@ namespace Mochie {
             SetProperties(mat);
             // SetKeywords(mat); - this spams errors from properties not found when called from here, idk why
         }
-        #endregion 
+        #endregion
     }
 }
